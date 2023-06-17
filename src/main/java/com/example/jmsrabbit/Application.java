@@ -7,52 +7,55 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
+import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 
-import java.io.DataInput;
+import javax.sound.midi.Receiver;
 
 
 @SpringBootApplication
-public class JmsRabbitApplication {
+public class Application {
     final static String queueName = "forecasts";
     final static String exchangeName = "weather";
 
-    @Bean
-    Queue forecasts() {
+    @Bean Queue forecasts() {
         return new Queue(queueName, true);
     }
 
-    @Bean
-    DirectExchange weather() {
+    @Bean DirectExchange weather() {
         return new DirectExchange(exchangeName, true, false);
-
     }
 
-    @Bean
-    Binding dataBinding(DirectExchange directExchange, Queue queue) {
+    @Bean Binding dataBinding(DirectExchange directExchange, Queue queue) {
         return BindingBuilder.bind(queue).to(directExchange).with(queueName);
     }
 
-    @Bean
-    CachingConnectionFactory connectionFactory() {
+    @Bean CachingConnectionFactory connectionFactory() {
         return new CachingConnectionFactory("127.0.0.1");
     }
-@Bean
+
+
+    @Bean
     SimpleMessageListenerContainer messageListenerContainer() {
-        SimpleMessageListenerContainer container =new SimpleMessageListenerContainer();
-    container.setConnectionFactory(connectionFactory());
-    container.setQueueNames(queueName);
-    return container;
+        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory());
+        container.setQueueNames(queueName);
+        return container;
     }
-    public static void main(String[] args) {
-        ConfigurableApplicationContext ctx= SpringApplication.run(JmsRabbitApplication.class, args);
-        RabbitTemplate rabbitTemplate=ctx.getBean(RabbitTemplate.class);
-        rabbitTemplate.convertAndSend(JmsRabbitApplication.queueName,"FL");
-        rabbitTemplate.convertAndSend(JmsRabbitApplication.queueName,"MA");
-        rabbitTemplate.convertAndSend(JmsRabbitApplication.queueName,"CA");
+
+    public static void main(String... args) throws java.lang.Exception {
+        ConfigurableApplicationContext ctx = SpringApplication.run(Application.class, args);
+
+        RabbitTemplate rabbitTemplate = ctx.getBean(RabbitTemplate.class);
+        rabbitTemplate.convertAndSend(Application.queueName, "FL");
+        rabbitTemplate.convertAndSend(Application.queueName, "MA");
+        rabbitTemplate.convertAndSend(Application.queueName, "CA");
+
+        System.in.read();
+        ctx.close();
     }
 
 }
